@@ -38,6 +38,29 @@ npm install
 node cli/index.js buckets
 ```
 
+#### 🌐 `nodejs_global_edge/`
+**NCP Global Edge CDN Purge 관리 도구**
+- NCP Global Edge CDN 캐시 퍼지 CLI 도구
+- 4가지 퍼지 유형 지원 (ALL, DIRECTORY, PATTERN, URL)
+- NCP API v2 서명 방식 구현
+- 직관적인 명령줄 인터페이스
+
+**주요 기능:**
+- ✅ 모든 콘텐츠 퍼지 (약 40분 소요)
+- ✅ 디렉토리 단위 퍼지 (약 40분 소요)
+- ✅ 확장자 패턴 퍼지 (약 40분 소요)
+- ✅ URL 단위 퍼지 (빠른 퍼지 지원)
+- ✅ 입력 유효성 검사 및 오류 처리
+- ✅ 상세한 사용 가이드 및 예시
+
+**사용 예제:**
+```bash
+cd nodejs_global_edge
+npm install
+node cli/index.js examples
+node cli/index.js url -e 123 -t "/index.html"
+```
+
 ### 🚀 향후 계획
 
 다음과 같은 도구들을 추가로 개발할 예정입니다:
@@ -63,13 +86,16 @@ cd ncloud
 # Object Storage 도구 사용
 cd nodejs_objectstorage
 npm install
-
-# 환경 변수 설정
 cp env.example .env
 # .env 파일 편집하여 NCP 자격 증명 입력
-
-# 사용 시작
 node cli/index.js --help
+
+# Global Edge CDN Purge 도구 사용
+cd ../nodejs_global_edge
+npm install
+cp env.example .env
+# .env 파일 편집하여 NCP 자격 증명 입력
+node cli/index.js examples
 ```
 
 ### 3. 자격 증명 설정
@@ -98,6 +124,7 @@ node cli/index.js --help
 
 ### 2024년 계획
 - [x] Object Storage 관리 도구 완성
+- [x] Global Edge CDN Purge 도구 완성
 - [ ] Cloud Insight 연동 도구 개발
 - [ ] Server 관리 도구 개발
 - [ ] 통합 CLI 도구 개발
