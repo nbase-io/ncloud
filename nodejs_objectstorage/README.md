@@ -257,10 +257,12 @@ node cli/index.js list -b your-bucket-name
 
 # 테스트 파일 생성 및 업로드
 echo "Hello World" > test.txt
-node cli/index.js upload -b your-bucket-name -k test.txt -f test.txt
 
 # 파일 다운로드
 node cli/index.js download -b your-bucket-name -k test.txt -o downloaded.txt
+
+# 파일 업로드
+node cli/index.js upload -b your-bucket-name -k test.txt
 
 # 객체 정보 조회
 node cli/index.js info -b your-bucket-name -k test.txt

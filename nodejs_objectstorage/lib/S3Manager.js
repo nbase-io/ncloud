@@ -25,6 +25,13 @@ export class S3Manager {
       signatureVersion: 'v4'
     };
     
+    console.log(`🔧 S3Manager Configuration:`);
+    console.log(`   Region: ${this.config.region}`);
+    console.log(`   Endpoint: ${this.config.endpoint}`);
+    console.log(`   ForcePathStyle: ${this.config.forcePathStyle}`);
+    console.log(`   SignatureVersion: ${this.config.signatureVersion}`);
+    console.log(`   AccessKeyId: ${this.config.credentials.accessKeyId ? this.config.credentials.accessKeyId.substring(0, 12) + '...' : 'undefined'}`);
+    
     this.client = new S3Client(this.config);
   }
 
@@ -121,10 +128,71 @@ export class S3Manager {
       let body;
       
       if (typeof filePath === 'string') {
+        const fs = await import('fs');
+        body = fs.readFileSync(filePath); // Buffer로 읽기
+      } else {
+        body = filePath; // Buffer 또는 stream
+      }
+
+      console.log(`🔧 Upload Debug Info:`);
+      console.log(`   Bucket: ${bucketName}`);
+      console.log(`   Key: ${key}`);
+      console.log(`   FilePath: ${filePath}`);
+      console.log(`   Using Buffer instead of Stream`);
+      console.log(`   Buffer size: ${body.length} bytes`);
+      console.log(`   Endpoint: ${this.config.endpoint}`);
+      console.log(`   Region: ${this.config.region}`);
+      console.log(`   AccessKeyId: ${this.config.credentials.accessKeyId ? this.config.credentials.accessKeyId.substring(0, 8) + '...' : 'undefined'}`);
+
+      const command = new PutObjectCommand({
+        Bucket: bucketName,
+        Key: key,
+        Body: body,
+        ContentType: options.contentType || 'text/plain',
+        Metadata: options.metadata
+      });
+      const response = await this.client.send(command);
+      return {
+        success: true,
+        etag: response.ETag,
+        location: `s3://${bucketName}/${key}`
+      };
+    } catch (error) {
+      console.log(`🚨 Upload Error Details:`);
+      console.log(`   Error Name: ${error.name}`);
+      console.log(`   Error Message: ${error.message}`);
+      console.log(`   Error Code: ${error.Code || 'N/A'}`);
+      console.log(`   Status Code: ${error.$metadata?.httpStatusCode || 'N/A'}`);
+      console.log(`   Request ID: ${error.$metadata?.requestId || 'N/A'}`);
+      
+      return {
+        success: false,
+        error: error.message,
+        details: {
+          name: error.name,
+          code: error.Code,
+          statusCode: error.$metadata?.httpStatusCode,
+          requestId: error.$metadata?.requestId
+        }
+      };
+    }
+  }
+
+  /**
+   * 객체 업로드 (Stream 방식 - 대안)
+   */
+  async uploadObjectWithStream(bucketName, key, filePath, options = {}) {
+    try {
+      let body;
+      
+      if (typeof filePath === 'string') {
         body = createReadStream(filePath);
       } else {
         body = filePath; // Buffer 또는 stream
       }
+
+      console.log(`🔧 Stream Upload Debug Info:`);
+      console.log(`   Using Stream method`);
 
       const command = new PutObjectCommand({
         Bucket: bucketName,
@@ -141,6 +209,10 @@ export class S3Manager {
         location: `s3://${bucketName}/${key}`
       };
     } catch (error) {
+      console.log(`🚨 Stream Upload Error:`);
+      console.log(`   Error Name: ${error.name}`);
+      console.log(`   Error Message: ${error.message}`);
+      
       return {
         success: false,
         error: error.message
@@ -245,4 +317,5 @@ export class S3Manager {
       };
     }
   }
+
 } 

@@ -61,6 +61,34 @@ node cli/index.js examples
 node cli/index.js url -e 123 -t "/index.html"
 ```
 
+#### 🔒 `nodejs_checkssl/`
+**SSL 인증서 만료 모니터링 시스템**
+- SSL 인증서 만료일 자동 체크 및 NCP SENS 문자 알림
+- 파일 기반 도메인/전화번호 관리 시스템
+- 중복 발송 방지 및 보안 강화 기능
+- 긴급도별 차등 알림 및 상세한 운영 메뉴얼
+
+**주요 기능:**
+- ✅ 대량 SSL 인증서 일괄 체크
+- ✅ 파일 기반 도메인 목록 관리 (domain.txt)
+- ✅ 다중 담당자 SMS 알림 (notification.txt)
+- ✅ 24시간 쿨다운으로 중복 발송 방지
+- ✅ 민감정보 마스킹 및 환경변수 보안
+- ✅ 긴급도별 스마트 알림 (3일/7일/14일/20일)
+- ✅ 발송 이력 추적 및 관리
+- ✅ 상세한 관리자 운영 매뉴얼
+
+**사용 예제:**
+```bash
+cd nodejs_checkssl
+npm install
+cp env-example.txt .env
+# .env 파일 편집하여 NCP SENS 설정
+npm start                    # 전체 도메인 체크
+npm run single google.com    # 단일 도메인 체크
+npm run status              # 발송 기록 확인
+```
+
 ### 🚀 향후 계획
 
 다음과 같은 도구들을 추가로 개발할 예정입니다:
@@ -68,9 +96,13 @@ node cli/index.js url -e 123 -t "/index.html"
 ## 🛠️ 기술 스택
 
 - **Node.js** - 주요 런타임 환경
+- **TypeScript** - 타입 안전성과 개발 생산성
 - **AWS SDK v3** - 클라우드 서비스 연동
+- **NCP SENS API** - SMS 문자 발송 서비스
 - **ES6 Modules** - 현대적인 JavaScript
 - **Commander.js** - CLI 인터페이스
+- **Axios** - HTTP 클라이언트
+- **crypto-js** - 암호화 및 인증
 - **기타** - 각 도구별 특화된 라이브러리들
 
 ## 📖 사용 가이드
@@ -96,6 +128,15 @@ npm install
 cp env.example .env
 # .env 파일 편집하여 NCP 자격 증명 입력
 node cli/index.js examples
+
+# SSL 인증서 모니터링 시스템 사용
+cd ../nodejs_checkssl
+npm install
+cp env-example.txt .env
+# .env 파일 편집하여 NCP SENS 설정 입력
+# domain.txt에 체크할 도메인 목록 입력
+# notification.txt에 알림받을 전화번호 입력
+npm start
 ```
 
 ### 3. 자격 증명 설정
@@ -125,6 +166,7 @@ node cli/index.js examples
 ### 2024년 계획
 - [x] Object Storage 관리 도구 완성
 - [x] Global Edge CDN Purge 도구 완성
+- [x] SSL 인증서 모니터링 시스템 완성
 - [ ] Cloud Insight 연동 도구 개발
 - [ ] Server 관리 도구 개발
 - [ ] 통합 CLI 도구 개발
@@ -139,7 +181,6 @@ node cli/index.js examples
 
 - [NAVER Cloud Platform 공식 사이트](https://www.ncloud.com/)
 - [NCP 개발자 가이드](https://guide.ncloud-docs.com/)
-- [NCP API 문서](https://ncloud.apigw.ntruss.com/)
 - [NCP 콘솔](https://console.ncloud.com/)
 
 ## 📞 지원 및 문의
@@ -155,7 +196,7 @@ node cli/index.js examples
 ### MIT License
 
 ```
-Copyright (c) 2024 NCLOUD Utilities Contributors
+Copyright (c) 2025 NBASE Utilities Contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

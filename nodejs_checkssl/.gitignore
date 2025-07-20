@@ -1,0 +1,36 @@
+# 환경 변수 파일 (민감한 정보 포함)
+.env
+.env.local
+.env.production
+.env.staging
+
+# 중복 발송 방지 기록 파일 (운영 데이터)
+last_sent.json
+
+# 의존성
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 빌드 결과물
+dist/
+build/
+*.tsbuildinfo
+
+# 로그 파일
+logs/
+*.log
+
+# 운영체제 파일
+.DS_Store
+Thumbs.db
+
+# 에디터 설정
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 테스트 커버리지
+coverage/ 

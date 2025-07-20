@@ -1,0 +1,29 @@
+{
+  "name": "ssl-checker",
+  "version": "1.0.0",
+  "description": "SSL 인증서 만료일 체크 및 문자 알림 서비스",
+  "main": "index.ts",
+  "scripts": {
+    "start": "ts-node index.ts",
+    "build": "tsc",
+    "dev": "ts-node --watch index.ts",
+    "check": "ts-node index.ts",
+    "status": "ts-node index.ts status",
+    "reset": "ts-node index.ts reset",
+    "single": "ts-node index.ts single"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "crypto-js": "^4.2.0",
+    "dotenv": "^16.3.0"
+  },
+  "devDependencies": {
+    "@types/crypto-js": "^4.2.0",
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  },
+  "keywords": ["ssl", "certificate", "monitoring", "sms", "ncp"],
+  "author": "",
+  "license": "MIT"
+} 

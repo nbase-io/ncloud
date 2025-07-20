@@ -1,0 +1,15 @@
+# .env 파일 생성 후 실제 값으로 설정하세요
+# 이 파일을 .env로 복사한 후 YOUR_*_HERE 부분을 실제 값으로 변경하세요
+
+# NCP SENS SMS 설정 (필수 - NCP 콘솔에서 발급받은 값으로 변경)
+NCP_SMS_URI=ncp:sms:kr:YOUR_PROJECT_ID:YOUR_SERVICE_ID
+NCP_SECRET_KEY=YOUR_SECRET_KEY_HERE
+NCP_ACCESS_KEY=YOUR_ACCESS_KEY_HERE  
+NCP_FROM_NUMBER=YOUR_PHONE_NUMBER
+
+# 기본 알림 설정 (선택사항)
+DEFAULT_PHONE=01012345678
+ALERT_DAYS_BEFORE=20
+
+# 로그 레벨 (선택사항: debug, info, warn, error)
+LOG_LEVEL=info 
