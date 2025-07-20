@@ -11,5 +11,9 @@ NCP_FROM_NUMBER=YOUR_PHONE_NUMBER
 DEFAULT_PHONE=01012345678
 ALERT_DAYS_BEFORE=20
 
+# 이모지 사용 여부 (선택사항: true/false, 기본값: false)
+# NCP SENS가 이모지를 지원하지 않으므로 false 권장
+USE_EMOJI=false
+
 # 로그 레벨 (선택사항: debug, info, warn, error)
 LOG_LEVEL=info 

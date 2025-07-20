@@ -25,7 +25,8 @@ export const config = {
   // 알림 설정 (기본값 제공)
   alert: {
     daysBeforeExpiry: parseInt(process.env.ALERT_DAYS_BEFORE || "20"),
-    defaultPhone: process.env.DEFAULT_PHONE || "01012345678"
+    defaultPhone: process.env.DEFAULT_PHONE || "01012345678",
+    useEmoji: process.env.USE_EMOJI === 'true' // 기본적으로 이모지 사용 안함
   },
   
   // 로그 설정 (기본값 제공)
@@ -47,6 +48,7 @@ NCP_FROM_NUMBER=YOUR_PHONE_NUMBER
 # 기본 알림 설정 (선택사항)
 DEFAULT_PHONE=01012345678
 ALERT_DAYS_BEFORE=20
+USE_EMOJI=false
 
 # 로그 레벨 (선택사항)
 LOG_LEVEL=info

@@ -139,30 +139,37 @@ async function sendSMS(phone: string, content: string): Promise<boolean> {
 // 세련된 SMS 메시지 생성
 function createSSLExpiryMessage(sslInfo: SSLInfo): string {
   const { domain, port, daysUntilExpiry, validTo, issuer } = sslInfo;
+  const useEmoji = config.alert.useEmoji;
   
   let urgencyLevel = '';
   let action = '';
   
   if (daysUntilExpiry <= 3) {
-    urgencyLevel = '🚨 매우 긴급';
+    urgencyLevel = useEmoji ? '🚨 매우 긴급' : '[매우 긴급]';
     action = '즉시 갱신하세요!';
   } else if (daysUntilExpiry <= 7) {
-    urgencyLevel = '🔥 긴급';
+    urgencyLevel = useEmoji ? '🔥 긴급' : '[긴급]';
     action = '즉시 갱신이 필요합니다!';
   } else if (daysUntilExpiry <= 14) {
-    urgencyLevel = '⚠️ 주의';
+    urgencyLevel = useEmoji ? '⚠️ 주의' : '[주의]';
     action = '갱신 준비를 시작하세요.';
   } else {
-    urgencyLevel = '📋 알림';
+    urgencyLevel = useEmoji ? '📋 알림' : '[알림]';
     action = '인증서 갱신을 준비해주세요.';
   }
 
   const portInfo = port !== 443 ? `:${port}` : '';
+  
+  // 이모지 사용 여부에 따른 메시지 포맷
+  const domainLabel = useEmoji ? '🌐 도메인' : '도메인';
+  const dateLabel = useEmoji ? '📅 만료일' : '만료일';
+  const issuerLabel = useEmoji ? '🏢 발급기관' : '발급기관';
+  
   const message = `${urgencyLevel} SSL 인증서 만료 알림
 
-🌐 도메인: ${domain}${portInfo}
-📅 만료일: ${validTo.toLocaleDateString('ko-KR')} (${daysUntilExpiry}일 후)
-🏢 발급기관: ${issuer}
+${domainLabel}: ${domain}${portInfo}
+${dateLabel}: ${validTo.toLocaleDateString('ko-KR')} (${daysUntilExpiry}일 후)
+${issuerLabel}: ${issuer}
 
 ${action}`;
 
