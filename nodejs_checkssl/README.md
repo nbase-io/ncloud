@@ -185,16 +185,191 @@ npm run dev
 
 ## 🛠️ 고급 설정
 
-### Cron 설정 (자동화)
-매일 오전 9시에 자동 체크:
+### 📅 Crontab 자동화 설정
+
+#### 1. Crontab 기본 설정
 ```bash
-# crontab -e
+# crontab 편집기 열기
+crontab -e
+
+# 현재 설정된 cron 작업 확인
+crontab -l
+
+# 특정 사용자의 crontab 확인 (root 권한 필요)
+sudo crontab -u username -l
+```
+
+#### 빠른 테스트 (매분 실행)
+```bash
+# 테스트용: 매분마다 실행 (테스트 후 꼭 삭제하세요!)
+* * * * * cd /path/to/ssl-checker && npm start >> /tmp/ssl-test.log 2>&1
+
+# 5분 후 테스트 로그 확인
+tail -f /tmp/ssl-test.log
+
+# 테스트 완료 후 cron 작업 제거
+crontab -e  # 위 라인 삭제
+```
+
+#### 2. 기본 스케줄 예제
+
+**매일 오전 9시 SSL 체크:**
+```bash
 0 9 * * * cd /path/to/ssl-checker && npm start >> /var/log/ssl-check.log 2>&1
 ```
 
-주간 체크 (월요일 오전 9시):
+**매일 오전 6시와 오후 6시 (하루 2번):**
 ```bash
-0 9 * * 1 cd /path/to/ssl-checker && npm start
+0 6,18 * * * cd /path/to/ssl-checker && npm start >> /var/log/ssl-check.log 2>&1
+```
+
+**평일 오전 9시만 체크:**
+```bash
+0 9 * * 1-5 cd /path/to/ssl-checker && npm start >> /var/log/ssl-check.log 2>&1
+```
+
+**매주 월요일 오전 8시:**
+```bash
+0 8 * * 1 cd /path/to/ssl-checker && npm start >> /var/log/ssl-check.log 2>&1
+```
+
+**매월 1일 오전 9시:**
+```bash
+0 9 1 * * cd /path/to/ssl-checker && npm start >> /var/log/ssl-check.log 2>&1
+```
+
+#### 3. 고급 스케줄링
+
+**4시간마다 체크 (24/7 모니터링):**
+```bash
+0 */4 * * * cd /path/to/ssl-checker && npm start >> /var/log/ssl-check.log 2>&1
+```
+
+**업무시간 중 2시간마다 (평일 9시-18시):**
+```bash
+0 9-18/2 * * 1-5 cd /path/to/ssl-checker && npm start >> /var/log/ssl-check.log 2>&1
+```
+
+#### 4. 환경변수 설정이 포함된 완전한 예제
+```bash
+# .env 파일이 있는 경로로 이동 후 실행
+0 9 * * * cd /path/to/ssl-checker && npm start >> /var/log/ssl-check-$(date +\%Y\%m\%d).log 2>&1
+
+# 특정 사용자로 실행 (root 권한 필요시)
+0 9 * * * /usr/bin/sudo -u username bash -c "cd /path/to/ssl-checker && npm start" >> /var/log/ssl-check.log 2>&1
+
+# Node.js 경로를 명시적으로 지정
+0 9 * * * cd /path/to/ssl-checker && /usr/local/bin/node /usr/local/bin/npm start >> /var/log/ssl-check.log 2>&1
+```
+
+#### 5. 로그 관리 및 정리
+```bash
+# 매일 오전 9시 SSL 체크 + 주간 로그 정리
+0 9 * * * cd /path/to/ssl-checker && npm start >> /var/log/ssl-check.log 2>&1
+0 2 * * 0 find /var/log -name "ssl-check*.log" -mtime +7 -delete
+
+# 로그 로테이션 (날짜별 파일 생성)
+0 9 * * * cd /path/to/ssl-checker && npm start >> /var/log/ssl-check-$(date +\%Y\%m\%d).log 2>&1
+
+# 로그 압축 및 보관 (30일 후 압축, 90일 후 삭제)
+0 3 * * * gzip /var/log/ssl-check-$(date -d "30 days ago" +\%Y\%m\%d).log 2>/dev/null
+0 4 * * * rm -f /var/log/ssl-check-$(date -d "90 days ago" +\%Y\%m\%d).log.gz 2>/dev/null
+```
+
+#### 6. 실제 운영 환경 설정 예제
+
+**프로덕션 환경 (매일 오전 6시, 에러 알림 포함):**
+```bash
+# SSL 체크 실행
+0 6 * * * cd /opt/ssl-checker && npm start >> /var/log/ssl-check.log 2>&1
+
+# 로그 에러 체크 및 관리자 알림
+5 6 * * * if grep -q "❌" /var/log/ssl-check.log; then echo "SSL 체크 에러 발생" | mail -s "SSL Monitor Alert" admin@company.com; fi
+```
+
+**개발 환경 (평일만, 간단한 로그):**
+```bash
+0 10 * * 1-5 cd /home/user/ssl-checker && npm start >> /tmp/ssl-check.log 2>&1
+```
+
+**스테이징 환경 (주 2회):**
+```bash
+0 9 * * 1,4 cd /staging/ssl-checker && npm start >> /var/log/staging-ssl.log 2>&1
+```
+
+#### 7. 문제 해결
+
+**Cron이 실행되지 않을 때:**
+```bash
+# cron 서비스 상태 확인
+sudo systemctl status cron    # Ubuntu/Debian
+sudo systemctl status crond   # CentOS/RHEL
+
+# cron 로그 확인
+sudo tail -f /var/log/cron
+sudo tail -f /var/log/syslog | grep cron
+
+# 환경변수 테스트
+0 9 * * * env > /tmp/cron-env.log && cd /path/to/ssl-checker && npm start >> /var/log/ssl-check.log 2>&1
+```
+
+**권한 문제 해결:**
+```bash
+# SSL 체크 디렉토리 권한 설정
+chmod 755 /path/to/ssl-checker
+chmod 644 /path/to/ssl-checker/.env
+
+# 로그 디렉토리 권한 설정
+sudo mkdir -p /var/log
+sudo chown $USER:$USER /var/log/ssl-check*.log
+```
+
+#### 8. Cron 표현식 참고
+
+```
+# 분 시 일 월 요일
+# *  *  *  *  *
+# │  │  │  │  │
+# │  │  │  │  └── 요일 (0-7, 0과 7은 일요일)
+# │  │  │  └───── 월 (1-12)
+# │  │  └──────── 일 (1-31)
+# │  └─────────── 시 (0-23)
+# └────────────── 분 (0-59)
+
+# 특수 표현
+@yearly   = 0 0 1 1 *    (매년 1월 1일 0시 0분)
+@monthly  = 0 0 1 * *    (매월 1일 0시 0분)
+@weekly   = 0 0 * * 0    (매주 일요일 0시 0분)
+@daily    = 0 0 * * *    (매일 0시 0분)
+@hourly   = 0 * * * *    (매시 0분)
+@reboot                  (시스템 재시작시)
+```
+
+#### 9. 권장 설정
+
+**소규모 사이트 (1-10개 도메인):**
+```bash
+# 매일 오전 9시
+0 9 * * * cd /path/to/ssl-checker && npm start >> /var/log/ssl-check.log 2>&1
+```
+
+**중간 규모 사이트 (10-50개 도메인):**
+```bash
+# 매일 오전 6시, 오후 6시
+0 6,18 * * * cd /path/to/ssl-checker && npm start >> /var/log/ssl-check.log 2>&1
+```
+
+**대규모 사이트 (50개+ 도메인):**
+```bash
+# 6시간마다
+0 */6 * * * cd /path/to/ssl-checker && npm start >> /var/log/ssl-check.log 2>&1
+```
+
+**미션 크리티컬 환경:**
+```bash
+# 4시간마다 + 에러 즉시 알림
+0 */4 * * * cd /path/to/ssl-checker && npm start >> /var/log/ssl-check.log 2>&1
+10 */4 * * * if grep -q "❌\|에러" /var/log/ssl-check.log; then /usr/local/bin/alert-script.sh; fi
 ```
 
 ### 대용량 도메인 관리
@@ -331,9 +506,35 @@ MIT License
 4. Push to the branch
 5. Open a Pull Request
 
+## 🚀 Quick Start (빠른 시작)
+
+```bash
+# 1. 프로젝트 클론 및 설치
+git clone <repository-url>
+cd nodejs_checkssl
+npm install
+
+# 2. 환경변수 설정
+cp env-example.txt .env
+vi .env  # NCP SENS 정보 입력
+
+# 3. 도메인 및 알림 대상 설정
+cp domain-example.txt domain.txt
+cp notification-example.txt notification.txt
+vi domain.txt      # 체크할 도메인 입력
+vi notification.txt # 알림받을 전화번호 입력
+
+# 4. 테스트 실행
+npm start
+
+# 5. Crontab 자동화 설정 (매일 오전 9시)
+echo "0 9 * * * cd $(pwd) && npm start >> /var/log/ssl-check.log 2>&1" | crontab -
+```
+
 ---
 
 **⚠️ 주의사항**
 - 환경변수는 절대 커밋하지 마세요
 - 운영 환경에서는 적절한 권한 설정을 하세요
-- 대량 발송시 NCP SENS 요금에 주의하세요 
+- 대량 발송시 NCP SENS 요금에 주의하세요
+- Cron 테스트 후 불필요한 작업은 반드시 삭제하세요 
