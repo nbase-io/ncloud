@@ -42,25 +42,35 @@ LOG_LEVEL=info             # 로그 레벨
 ```
 
 ### 3. 도메인 목록 설정
-`domain.txt` 파일에 체크할 도메인을 입력하세요:
+```bash
+# 예시 파일을 복사하여 실제 도메인으로 수정
+cp domain-example.txt domain.txt
+vi domain.txt
+```
 
+`domain.txt` 파일에 체크할 도메인을 입력하세요:
 ```
 # SSL 인증서를 체크할 도메인 리스트
-google.com
-naver.com
-github.com
+your-domain.com
+api.your-domain.com
+admin.your-domain.com
 
 # 포트가 443이 아닌 경우
 example.com:8443
 ```
 
 ### 4. 알림 대상 설정
-`notification.txt` 파일에 알림받을 전화번호를 입력하세요:
+```bash
+# 예시 파일을 복사하여 실제 전화번호로 수정
+cp notification-example.txt notification.txt
+vi notification.txt
+```
 
+`notification.txt` 파일에 알림받을 전화번호를 입력하세요:
 ```
 # 알림을 받을 전화번호 리스트
-01012345678
-01087654321
+01012345678  # 담당자1
+01087654321  # 담당자2
 ```
 
 ## 📱 사용법
@@ -181,17 +191,20 @@ find /var/log/ssl-check* -mtime +30 -delete
 
 ```
 nodejs_checkssl/
-├── index.ts              # 메인 로직
-├── config.ts             # 환경변수 설정
-├── utils.ts              # 유틸리티 함수
-├── domain.txt            # 체크 대상 도메인 목록
-├── notification.txt      # 알림 대상 전화번호 목록
-├── env-example.txt       # 환경변수 예시
-├── .env                  # 환경변수 (gitignore)
-├── last_sent.json       # 발송 기록 (gitignore)
-├── package.json          # 의존성 및 스크립트
-├── tsconfig.json         # TypeScript 설정
-└── README.md            # 이 파일
+├── index.ts                 # 메인 로직
+├── config.ts                # 환경변수 설정
+├── utils.ts                 # 유틸리티 함수
+├── domain-example.txt       # 도메인 목록 예시
+├── domain.txt              # 체크 대상 도메인 목록 (gitignore)
+├── notification-example.txt # 전화번호 목록 예시
+├── notification.txt        # 알림 대상 전화번호 목록 (gitignore)
+├── env-example.txt         # 환경변수 예시
+├── .env                    # 환경변수 (gitignore)
+├── last_sent.json         # 발송 기록 (gitignore)
+├── package.json           # 의존성 및 스크립트
+├── tsconfig.json          # TypeScript 설정
+├── README.md             # 사용자 가이드
+└── MANUAL.md             # 관리자 운영 매뉴얼
 ```
 
 ## 🔧 문제 해결

@@ -7,6 +7,10 @@
 # 중복 발송 방지 기록 파일 (운영 데이터)
 last_sent.json
 
+# 운영 설정 파일 (민감한 정보 포함)
+domain.txt
+notification.txt
+
 # 의존성
 node_modules/
 npm-debug.log*

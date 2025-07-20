@@ -93,11 +93,23 @@ export function formatDate(date: Date): string {
 
 // 파일 존재 여부 및 접근 권한 확인
 export function validateFiles(): void {
-  const requiredFiles = ['domain.txt', 'notification.txt'];
+  const requiredFiles = [
+    { file: 'domain.txt', example: 'domain-example.txt' },
+    { file: 'notification.txt', example: 'notification-example.txt' }
+  ];
   
-  for (const file of requiredFiles) {
+  for (const { file, example } of requiredFiles) {
     if (!fs.existsSync(file)) {
-      throw new Error(`❌ 필수 파일이 없습니다: ${file}\n사용법은 README.md를 참고하세요.`);
+      const exampleExists = fs.existsSync(example);
+      const copyCmd = exampleExists ? `cp ${example} ${file}` : `touch ${file}`;
+      
+      throw new Error(
+        `❌ 필수 파일이 없습니다: ${file}\n\n` +
+        `다음 명령으로 파일을 생성하세요:\n` +
+        `${copyCmd}\n` +
+        `vi ${file}\n\n` +
+        `자세한 사용법은 README.md를 참고하세요.`
+      );
     }
     
     try {
