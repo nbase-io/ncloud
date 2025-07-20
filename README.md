@@ -72,6 +72,7 @@ node cli/index.js url -e 123 -t "/index.html"
 - ✅ 대량 SSL 인증서 일괄 체크
 - ✅ 파일 기반 도메인 목록 관리 (domain.txt)
 - ✅ 다중 담당자 SMS 알림 (notification.txt)
+- ✅ SSL 체크 실패시 자동 에러 알림
 - ✅ 24시간 쿨다운으로 중복 발송 방지
 - ✅ 민감정보 마스킹 및 환경변수 보안
 - ✅ 긴급도별 스마트 알림 (3일/7일/14일/20일)

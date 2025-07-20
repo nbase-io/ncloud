@@ -176,7 +176,47 @@ ${action}`;
   return message;
 }
 
-// 중복 발송 확인
+// SSL 체크 실패 메시지 생성
+function createSSLErrorMessage(domain: string, port: number, error: string): string {
+  const useEmoji = config.alert.useEmoji;
+  
+  const urgencyLevel = useEmoji ? '🚨 긴급' : '[긴급]';
+  const domainLabel = useEmoji ? '🌐 도메인' : '도메인';
+  const errorLabel = useEmoji ? '❌ 오류' : '오류';
+  const actionLabel = useEmoji ? '🔧 조치필요' : '조치필요';
+  
+  const portInfo = port !== 443 ? `:${port}` : '';
+  
+  // 에러 타입별 설명
+  let errorDesc = '';
+  let action = '';
+  
+  if (error.includes('연결 시간 초과') || error.includes('timeout')) {
+    errorDesc = 'SSL 연결 시간 초과';
+    action = '서버 상태 및 네트워크 연결을 확인하세요.';
+  } else if (error.includes('연결 실패') || error.includes('ENOTFOUND')) {
+    errorDesc = '도메인 연결 실패';
+    action = '도메인명과 DNS 설정을 확인하세요.';
+  } else if (error.includes('ECONNREFUSED')) {
+    errorDesc = '서버 연결 거부';
+    action = '서버가 실행 중인지 확인하세요.';
+  } else {
+    errorDesc = 'SSL 인증서 확인 실패';
+    action = '서버 및 SSL 설정을 점검하세요.';
+  }
+  
+  const message = `${urgencyLevel} SSL 체크 실패 알림
+
+${domainLabel}: ${domain}${portInfo}
+${errorLabel}: ${errorDesc}
+${actionLabel}: ${action}
+
+즉시 확인이 필요합니다.`;
+
+  return message;
+}
+
+// 중복 발송 확인 (SSL 정보 기반)
 function shouldSendNotification(domain: string, sslInfo: SSLInfo): boolean {
   const records = readJsonFile(LAST_SENT_FILE);
   const key = `${domain}:${sslInfo.port}`;
@@ -206,7 +246,40 @@ function shouldSendNotification(domain: string, sslInfo: SSLInfo): boolean {
   return false;
 }
 
-// 발송 기록 저장
+// 중복 발송 확인 (에러 기반)
+function shouldSendErrorNotification(domain: string, port: number): boolean {
+  const records = readJsonFile(LAST_SENT_FILE);
+  const key = `${domain}:${port}:error`;
+  const record: NotificationRecord = records[key];
+
+  if (!record) {
+    return true; // 첫 발송
+  }
+
+  const lastSentDate = new Date(record.lastSentDate);
+  const hoursSinceLastSent = (Date.now() - lastSentDate.getTime()) / (1000 * 60 * 60);
+
+  // 에러 알림은 4시간 쿨다운 (더 자주 알림)
+  if (hoursSinceLastSent < 4) {
+    console.log(`⏰ ${domain} 에러 알림 쿨다운 중 (마지막 발송: ${formatDate(lastSentDate)})`);
+    return false;
+  }
+
+  // 에러는 하루에 최대 6번까지 발송
+  if (record.sentCount >= 6) {
+    const today = new Date().toDateString();
+    const lastSentDay = new Date(record.lastSentDate).toDateString();
+    
+    if (today === lastSentDay) {
+      console.log(`🔇 ${domain} 에러 알림 일일 발송 한도 초과`);
+      return false;
+    }
+  }
+
+  return true;
+}
+
+// 발송 기록 저장 (SSL 정보 기반)
 function recordSentNotification(domain: string, sslInfo: SSLInfo): void {
   const records = readJsonFile(LAST_SENT_FILE);
   const key = `${domain}:${sslInfo.port}`;
@@ -217,6 +290,27 @@ function recordSentNotification(domain: string, sslInfo: SSLInfo): void {
     lastSentDate: new Date().toISOString(),
     lastExpiryDate: sslInfo.validTo.toISOString(),
     sentCount: existing.sentCount + 1
+  };
+
+  writeJsonFile(LAST_SENT_FILE, records);
+}
+
+// 발송 기록 저장 (에러 기반)
+function recordSentErrorNotification(domain: string, port: number): void {
+  const records = readJsonFile(LAST_SENT_FILE);
+  const key = `${domain}:${port}:error`;
+  const existing = records[key] || { sentCount: 0 };
+
+  // 새로운 날짜면 카운트 리셋
+  const today = new Date().toDateString();
+  const lastSentDay = existing.lastSentDate ? new Date(existing.lastSentDate).toDateString() : '';
+  const sentCount = today === lastSentDay ? existing.sentCount + 1 : 1;
+
+  records[key] = {
+    domain,
+    lastSentDate: new Date().toISOString(),
+    lastExpiryDate: 'ERROR', // 에러는 만료일이 없음
+    sentCount
   };
 
   writeJsonFile(LAST_SENT_FILE, records);
@@ -273,6 +367,34 @@ async function checkDomainSSL(domain: string, port: number, phoneNumbers: string
     
   } catch (error: any) {
     console.error(`❌ ${domain}:${port} SSL 체크 실패: ${error.message}`);
+    
+    // SSL 체크 실패시에도 알림 발송
+    if (shouldSendErrorNotification(domain, port)) {
+      console.log(`📱 ${domain} SSL 체크 실패 알림 발송 중... (${phoneNumbers.length}명)`);
+      
+      const errorMessage = createSSLErrorMessage(domain, port, error.message);
+      let successCount = 0;
+      
+      // 배치 발송 (속도 제한)
+      for (const phone of phoneNumbers) {
+        const success = await sendSMS(phone, errorMessage);
+        if (success) successCount++;
+        
+        // API 호출 제한을 위한 딜레이 (1초)
+        if (phoneNumbers.length > 1) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+      
+      if (successCount > 0) {
+        recordSentErrorNotification(domain, port);
+        console.log(`✅ ${domain} 에러 알림 완료 (${successCount}/${phoneNumbers.length}명)`);
+      } else {
+        console.log(`❌ ${domain} 에러 알림 발송 실패`);
+      }
+    } else {
+      console.log(`🔇 ${domain} 에러 알림 쿨다운 중 - 발송 건너뜀`);
+    }
   }
 }
 
@@ -339,12 +461,40 @@ export function showStatus(): void {
     return;
   }
   
+  // SSL 정상 알림과 에러 알림 분리
+  const sslRecords: Array<[string, NotificationRecord]> = [];
+  const errorRecords: Array<[string, NotificationRecord]> = [];
+  
   for (const [key, record] of Object.entries(records)) {
     const r = record as NotificationRecord;
-    const lastSent = formatDate(new Date(r.lastSentDate));
-    console.log(`🌐 ${key}`);
-    console.log(`   📅 마지막 발송: ${lastSent}`);
-    console.log(`   📊 발송 횟수: ${r.sentCount}회\n`);
+    if (key.endsWith(':error')) {
+      errorRecords.push([key, r]);
+    } else {
+      sslRecords.push([key, r]);
+    }
+  }
+  
+  // SSL 만료 알림 기록
+  if (sslRecords.length > 0) {
+    console.log('🔔 SSL 만료 알림 기록:');
+    for (const [key, record] of sslRecords) {
+      const lastSent = formatDate(new Date(record.lastSentDate));
+      console.log(`🌐 ${key}`);
+      console.log(`   📅 마지막 발송: ${lastSent}`);
+      console.log(`   📊 발송 횟수: ${record.sentCount}회\n`);
+    }
+  }
+  
+  // SSL 에러 알림 기록
+  if (errorRecords.length > 0) {
+    console.log('🚨 SSL 에러 알림 기록:');
+    for (const [key, record] of errorRecords) {
+      const lastSent = formatDate(new Date(record.lastSentDate));
+      const domain = key.replace(':error', '');
+      console.log(`❌ ${domain}`);
+      console.log(`   📅 마지막 발송: ${lastSent}`);
+      console.log(`   📊 발송 횟수: ${record.sentCount}회 (오늘)\n`);
+    }
   }
 }
 
