@@ -127,7 +127,9 @@ export function validateEnvValue(key: string, value: string): boolean {
       return /^[A-Z0-9]{20,}$/.test(value);
     
     case 'NCP_FROM_NUMBER':
-      return validatePhoneNumber(value);
+      // 발신번호는 유선전화도 가능 (02, 031-069, 070)
+      const cleanedFromNumber = value.replace(/[^0-9]/g, '');
+      return /^(02|0[3-6][0-9]|070)\d{7,8}$|^01[0-9]\d{7,8}$/.test(cleanedFromNumber);
     
     case 'ALERT_DAYS_BEFORE':
       const days = parseInt(value);
