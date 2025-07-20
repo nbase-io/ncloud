@@ -163,14 +163,6 @@ npm start
 
 ## 📋 로드맵
 
-### 2024년 계획
-- [x] Object Storage 관리 도구 완성
-- [x] Global Edge CDN Purge 도구 완성
-- [x] SSL 인증서 모니터링 시스템 완성
-- [ ] Cloud Insight 연동 도구 개발
-- [ ] Server 관리 도구 개발
-- [ ] 통합 CLI 도구 개발
-
 ### 2025년 계획
 - [ ] CDN 관리 도구 개발
 - [ ] 보안 도구 모음 개발
