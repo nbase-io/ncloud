@@ -1,4 +1,5 @@
 import { config as dotenvConfig } from 'dotenv';
+import { validateEnvValue } from './validators';
 
 // .env 파일 로드
 dotenvConfig();
@@ -9,6 +10,12 @@ function getRequiredEnv(key: string): string {
   if (!value) {
     throw new Error(`❌ 필수 환경변수 ${key}가 설정되지 않았습니다. .env 파일을 확인해주세요.`);
   }
+  
+  // 환경변수 값 유효성 검증
+  if (!validateEnvValue(key, value)) {
+    throw new Error(`❌ 환경변수 ${key}의 값이 유효하지 않습니다: ${value.substring(0, 10)}...`);
+  }
+  
   return value;
 }
 

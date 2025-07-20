@@ -1,9 +1,15 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { validateFilePath, validateDomain, validatePhoneNumber, validatePort, sanitizeString } from './validators';
 
 // 파일에서 라인별로 데이터 읽기 (주석과 빈 줄 제거)
 export function readLinesFromFile(filePath: string): string[] {
   try {
+    // 파일 경로 검증 (Path Traversal 방지)
+    if (!validateFilePath(filePath)) {
+      throw new Error(`유효하지 않은 파일 경로입니다: ${filePath}`);
+    }
+    
     if (!fs.existsSync(filePath)) {
       throw new Error(`파일을 찾을 수 없습니다: ${filePath}`);
     }
@@ -11,10 +17,10 @@ export function readLinesFromFile(filePath: string): string[] {
     const content = fs.readFileSync(filePath, 'utf-8');
     return content
       .split('\n')
-      .map(line => line.trim())
+      .map(line => sanitizeString(line.trim())) // 입력 sanitization
       .filter(line => line && !line.startsWith('#'));
   } catch (error) {
-    console.error(`❌ 파일 읽기 실패 (${filePath}):`, error);
+    console.error(`❌ 파일 읽기 실패 (${sanitizeString(filePath)}):`, error instanceof Error ? error.message : error);
     throw error;
   }
 }
@@ -22,28 +28,45 @@ export function readLinesFromFile(filePath: string): string[] {
 // 도메인 리스트 읽기
 export function loadDomains(): Array<{domain: string, port: number}> {
   const lines = readLinesFromFile('domain.txt');
-  return lines.map(line => {
-    const [domain, portStr] = line.split(':');
-    return {
-      domain: domain.trim(),
-      port: portStr ? parseInt(portStr.trim()) : 443
-    };
-  });
+  return lines
+    .map(line => {
+      const [domainPart, portStr] = line.split(':');
+      const domain = domainPart.trim();
+      const port = portStr ? parseInt(portStr.trim()) : 443;
+      
+      return { domain, port };
+    })
+    .filter(({ domain, port }) => {
+      // 도메인 검증
+      if (!validateDomain(domain)) {
+        console.warn(`⚠️ 유효하지 않은 도메인: ${domain} (무시됨)`);
+        return false;
+      }
+      
+      // 포트 검증
+      if (!validatePort(port)) {
+        console.warn(`⚠️ 유효하지 않은 포트: ${port} (무시됨)`);
+        return false;
+      }
+      
+      return true;
+    });
 }
 
 // 전화번호 리스트 읽기
 export function loadPhoneNumbers(): string[] {
   const lines = readLinesFromFile('notification.txt');
   
-  // 전화번호 유효성 검증
-  return lines.filter(phone => {
-    const cleaned = phone.replace(/[^0-9]/g, '');
-    if (cleaned.length !== 11 || !cleaned.startsWith('010')) {
-      console.warn(`⚠️ 잘못된 전화번호 형식: ${phone} (무시됨)`);
-      return false;
-    }
-    return true;
-  }).map(phone => phone.replace(/[^0-9]/g, ''));
+  // 전화번호 유효성 검증 (강화된 검증 사용)
+  return lines
+    .filter(phone => {
+      if (!validatePhoneNumber(phone)) {
+        console.warn(`⚠️ 유효하지 않은 전화번호: ${phone} (무시됨)`);
+        return false;
+      }
+      return true;
+    })
+    .map(phone => phone.replace(/[^0-9]/g, ''));
 }
 
 // 민감한 정보 마스킹
@@ -60,22 +83,33 @@ export function maskSensitiveInfo(text: string): string {
 // JSON 파일 안전하게 읽기/쓰기
 export function readJsonFile(filePath: string): any {
   try {
+    // 파일 경로 검증
+    if (!validateFilePath(filePath)) {
+      console.warn(`⚠️ 유효하지 않은 파일 경로 (${sanitizeString(filePath)}), 빈 객체로 초기화`);
+      return {};
+    }
+    
     if (!fs.existsSync(filePath)) {
       return {};
     }
     const content = fs.readFileSync(filePath, 'utf-8');
     return JSON.parse(content);
   } catch (error) {
-    console.warn(`⚠️ JSON 파일 읽기 실패 (${filePath}), 빈 객체로 초기화`);
+    console.warn(`⚠️ JSON 파일 읽기 실패 (${sanitizeString(filePath)}), 빈 객체로 초기화`);
     return {};
   }
 }
 
 export function writeJsonFile(filePath: string, data: any): void {
   try {
+    // 파일 경로 검증
+    if (!validateFilePath(filePath)) {
+      throw new Error(`유효하지 않은 파일 경로입니다: ${filePath}`);
+    }
+    
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
   } catch (error) {
-    console.error(`❌ JSON 파일 쓰기 실패 (${filePath}):`, error);
+    console.error(`❌ JSON 파일 쓰기 실패 (${sanitizeString(filePath)}):`, error instanceof Error ? error.message : error);
     throw error;
   }
 }

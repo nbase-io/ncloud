@@ -37,7 +37,14 @@ function getSSLInfo(domain: string, port: number = 443): Promise<SSLInfo> {
     const timeoutMs = 10000; // 10초 타임아웃
     
     const socket = tls.connect(port, domain, { 
-      rejectUnauthorized: false,
+      rejectUnauthorized: true, // SSL 인증서 검증 활성화
+      checkServerIdentity: (hostname, cert) => {
+        // 도메인과 인증서 일치 여부 확인
+        if (hostname !== domain) {
+          return new Error(`인증서 도메인 불일치: ${hostname} vs ${domain}`);
+        }
+        return undefined;
+      },
       timeout: timeoutMs
     }, () => {
       try {
@@ -366,13 +373,15 @@ async function checkDomainSSL(domain: string, port: number, phoneNumbers: string
     }
     
   } catch (error: any) {
-    console.error(`❌ ${domain}:${port} SSL 체크 실패: ${error.message}`);
+    // 에러 메시지 sanitization (정보 노출 방지)
+    const sanitizedError = error.message ? error.message.replace(/[\x00-\x1f\x7f]/g, '').substring(0, 200) : '알 수 없는 오류';
+    console.error(`❌ ${domain}:${port} SSL 체크 실패: ${sanitizedError}`);
     
     // SSL 체크 실패시에도 알림 발송
     if (shouldSendErrorNotification(domain, port)) {
       console.log(`📱 ${domain} SSL 체크 실패 알림 발송 중... (${phoneNumbers.length}명)`);
       
-      const errorMessage = createSSLErrorMessage(domain, port, error.message);
+      const errorMessage = createSSLErrorMessage(domain, port, sanitizedError);
       let successCount = 0;
       
       // 배치 발송 (속도 제한)
