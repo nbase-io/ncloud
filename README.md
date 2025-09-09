@@ -90,9 +90,9 @@ npm run single google.com    # 단일 도메인 체크
 npm run status              # 발송 기록 확인
 ```
 
-#### 🔄 `nodejs_s3sync/`
+#### 🔄 `nodejs_objectstorage_sync/`
 **S3 간 파일 동기화 CLI 도구**
-- 서로 다른 S3 서비스 간의 파일을 효율적으로 동기화
+- 서로 다른 ObjectStorage 서비스 간의 파일을 효율적으로 동기화
 - 엔터프라이즈급 고도화된 기능들 포함
 - 데이터 무결성 보장 및 장애 복구 시스템
 - 실시간 모니터링 및 상세한 성능 메트릭
@@ -113,7 +113,7 @@ npm run status              # 발송 기록 확인
 
 **사용 예제:**
 ```bash
-cd nodejs_s3sync
+cd nodejs_objectstorage_sync
 npm install
 cp env.example .env
 # .env 파일 편집하여 소스/대상 S3 설정
