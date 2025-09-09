@@ -90,6 +90,51 @@ npm run single google.com    # 단일 도메인 체크
 npm run status              # 발송 기록 확인
 ```
 
+#### 🔄 `nodejs_s3sync/`
+**S3 간 파일 동기화 CLI 도구**
+- 서로 다른 S3 서비스 간의 파일을 효율적으로 동기화
+- 엔터프라이즈급 고도화된 기능들 포함
+- 데이터 무결성 보장 및 장애 복구 시스템
+- 실시간 모니터링 및 상세한 성능 메트릭
+
+**주요 기능:**
+- ✅ 전체/부분 동기화 (prefix 기반)
+- ✅ 고급 필터링 (include/exclude 패턴)
+- ✅ 병렬 처리 및 성능 최적화
+- ✅ 변경 감지 (ETag 비교)
+- ✅ 중단된 동기화 재개 기능
+- ✅ MD5 체크섬 검증으로 데이터 무결성 보장
+- ✅ 지수 백오프를 사용한 자동 재시도
+- ✅ 실시간 진행률 표시 및 ETA 계산
+- ✅ 상세한 로깅 시스템 및 모니터링
+- ✅ JSON 설정 파일 지원
+- ✅ 파일 무결성 검증 모드
+- ✅ 대화형 설정 및 CLI 인터페이스
+
+**사용 예제:**
+```bash
+cd nodejs_s3sync
+npm install
+cp env.example .env
+# .env 파일 편집하여 소스/대상 S3 설정
+
+# 기본 동기화
+npx s3-sync sync -s source-bucket -d dest-bucket
+
+# 고급 동기화 (체크섬 검증, 재개 모드)
+npx s3-sync sync -s source-bucket -d dest-bucket --verify-checksum --resume
+
+# 설정 파일 사용
+npx s3-sync init -f config.json
+npx s3-sync sync-config -c config.json
+
+# 파일 무결성 검증
+npx s3-sync verify -s source-bucket -d dest-bucket
+
+# 실시간 로그 모니터링
+npx s3-sync logs --follow
+```
+
 ### 🚀 향후 계획
 
 다음과 같은 도구들을 추가로 개발할 예정입니다:
@@ -138,6 +183,13 @@ cp env-example.txt .env
 # domain.txt에 체크할 도메인 목록 입력
 # notification.txt에 알림받을 전화번호 입력
 npm start
+
+# S3 동기화 도구 사용
+cd ../nodejs_s3sync
+npm install
+cp env.example .env
+# .env 파일 편집하여 소스/대상 S3 설정 입력
+npx s3-sync sync -s source-bucket -d dest-bucket
 ```
 
 ### 3. 자격 증명 설정
@@ -165,6 +217,7 @@ npm start
 ## 📋 로드맵
 
 ### 2025년 계획
+- [x] S3 간 파일 동기화 도구 개발 ✅
 - [ ] CDN 관리 도구 개발
 - [ ] 보안 도구 모음 개발
 - [ ] 웹 기반 관리 인터페이스 개발
